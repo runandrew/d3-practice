@@ -2,15 +2,13 @@
 
 // Required libraries
 const express = require('express');
+const path = require('path');
 
 // App creation
 const app = express();
 const port = 8080;
 
-// GET - test to see if the server is good
-app.get('/', (req, res, next) => {
-    res.send('We are live!');
-});
+app.use('/', express.static(path.join(__dirname, '/public')));
 
 // Start the port
 app.listen(port, () => {
