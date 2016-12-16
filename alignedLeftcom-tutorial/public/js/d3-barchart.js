@@ -6,7 +6,7 @@
 const width = 1200;
 const height = 250;
 
-const maxNumber = 50;
+const maxNumber = 100;
 
 // SVG Construction - Bar chart
 const svg = d3.select('body')
