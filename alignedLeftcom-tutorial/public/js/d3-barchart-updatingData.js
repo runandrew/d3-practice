@@ -8,6 +8,7 @@ const height = 250;
 const maxNumber = 100;
 let keyCounter = 0;
 const key = data => data.key;
+const startingAmount = 20;
 
 // SVG Construction - Bar chart
 const svg = d3.select('body')
@@ -15,7 +16,7 @@ const svg = d3.select('body')
 .attr('width', width)
 .attr('height', height);
 
-const dataset = (new Array(20)).fill(0, 0, 20);
+const dataset = (new Array(startingAmount)).fill(0, 0, startingAmount);
 
 // Dataset creation
 createNewDataValues();
@@ -33,40 +34,37 @@ const yScale = d3.scaleLinear()
 .range([height, 0])
 .nice();
 
-bars.enter()
-.append('rect')
-.attr('x', (data, i) => xScale(i))
-.attr('y', (data) => yScale(data.value))
-.attr('width', xScale.bandwidth())
-.attr('height', (data) => height - yScale(data.value))
-.attr('fill', (data) => `rgb(0, 0, ${ data.value * 10 })`);
-
-text.enter()
-.append('text')
-.text(data => data.value)
-.attr('x', (data, i) => xScale(i) + xScale.bandwidth() / 2)
-.attr('y', (data) => yScale(data.value) + 14)
-.attr('font-family', 'sans-serif')
-.attr('font-size', '11px')
-.attr('fill', 'white')
-.attr('text-anchor', 'middle');
+enterDataValue();
+updateDataValues();
 
 // Event listener
 d3.select('#updateData')
 .on('click', () => {
     updateRandomDataValues();
+    updateScales();
     updateDataValues();
 });
 
 d3.select('#addData')
 .on('click', () => {
-    addDataValue();
+    dataset.push({
+        key: keyCounter,
+        value: generateRandomNumber(maxNumber)
+    });
+    keyCounter++;
+
+    updateScales();
+    updateDataRefs();
+    enterDataValue();
     updateDataValues();
 });
 
 d3.select('#removeData')
 .on('click', () => {
-    removeDataValue();
+    dataset.shift();
+    updateDataRefs();
+    updateScales();
+    exitDataValue();
     updateDataValues();
 });
 
@@ -91,7 +89,6 @@ function updateRandomDataValues() {
 }
 
 function updateScales() {
-    // Reset the x and y domain
     xScale.domain(d3.range(dataset.length));
     yScale.domain([0, d3.max(dataset, data => data.value)]);
 }
@@ -120,19 +117,7 @@ function updateDataValues() {
 }
 
 
-function addDataValue() {
-
-    // Add new data value
-    dataset.push({
-        key: keyCounter,
-        value: generateRandomNumber(maxNumber)
-    });
-    keyCounter++;
-
-    // Reset the x and y domain
-    updateScales();
-    updateDataRefs();
-
+function enterDataValue() {
     // Create the new bar and set it out of view
     bars.enter()
     .append('rect')
@@ -154,11 +139,7 @@ function addDataValue() {
 }
 
 
-function removeDataValue() {
-    dataset.shift();
-    updateDataRefs();
-    updateScales();
-
+function exitDataValue() {
     bars.exit()
     .transition()
     .duration(500)
@@ -170,5 +151,4 @@ function removeDataValue() {
     .duration(500)
     .attr('x', -xScale.bandwidth())
     .remove();
-
 }
