@@ -6,7 +6,8 @@
 const width = 800;
 const height = 250;
 const maxNumber = 100;
-// let numberOfEl = 20;
+let keyCounter = 0;
+const key = data => data.key;
 
 // SVG Construction - Bar chart
 const svg = d3.select('body')
@@ -16,11 +17,10 @@ const svg = d3.select('body')
 
 const dataset = (new Array(20)).fill(0, 0, 20);
 
-
 // Dataset creation
 createNewDataValues();
-var bars = svg.selectAll('rect').data(dataset);
-var text = svg.selectAll('text').data(dataset);
+var bars = svg.selectAll('rect').data(dataset, key);
+var text = svg.selectAll('text').data(dataset, key);
 
 // Axes
 const xScale = d3.scaleBand()
@@ -29,25 +29,23 @@ const xScale = d3.scaleBand()
 .paddingInner(0.05);
 
 const yScale = d3.scaleLinear()
-.domain([0, d3.max(dataset, data => data)])
+.domain([0, d3.max(dataset, data => data.value)])
 .range([height, 0])
 .nice();
 
 bars.enter()
 .append('rect')
 .attr('x', (data, i) => xScale(i))
-.attr('y', (data) => yScale(data))
+.attr('y', (data) => yScale(data.value))
 .attr('width', xScale.bandwidth())
-.attr('height', (data) => height - yScale(data))
-.attr('fill', (data) => `rgb(0, 0, ${ data * 10 })`);
+.attr('height', (data) => height - yScale(data.value))
+.attr('fill', (data) => `rgb(0, 0, ${ data.value * 10 })`);
 
-svg.selectAll('text')
-.data(dataset)
-.enter()
+text.enter()
 .append('text')
-.text(data => data)
+.text(data => data.value)
 .attr('x', (data, i) => xScale(i) + xScale.bandwidth() / 2)
-.attr('y', (data) => yScale(data) + 14)
+.attr('y', (data) => yScale(data.value) + 14)
 .attr('font-family', 'sans-serif')
 .attr('font-size', '11px')
 .attr('fill', 'white')
@@ -56,7 +54,7 @@ svg.selectAll('text')
 // Event listener
 d3.select('#updateData')
 .on('click', () => {
-    createNewDataValues();
+    updateRandomDataValues();
     updateDataValues();
 });
 
@@ -69,82 +67,108 @@ d3.select('#addData')
 d3.select('#removeData')
 .on('click', () => {
     removeDataValue();
+    updateDataValues();
 });
-
-function createNewDataValues() {
-    for (let i = 0; i < dataset.length; i++) {
-        dataset[i] = generateRandomNumber(maxNumber);
-    }
-}
 
 function generateRandomNumber(maxValue) {
     return Math.floor(Math.random() * (maxValue + 1));
-
 }
+
+function createNewDataValues() {
+    for (let i = 0; i < dataset.length; i++) {
+        dataset[i] = {
+            key: keyCounter,
+            value: generateRandomNumber(maxNumber)
+        };
+        keyCounter++;
+    }
+}
+
+function updateRandomDataValues() {
+    for (let i = 0; i < dataset.length; i++) {
+        dataset[i].value = generateRandomNumber(maxNumber);
+    }
+}
+
+function updateScales() {
+    // Reset the x and y domain
+    xScale.domain(d3.range(dataset.length));
+    yScale.domain([0, d3.max(dataset, data => data.value)]);
+}
+
+function updateDataRefs() {
+    bars = svg.selectAll('rect').data(dataset, key);
+    text = svg.selectAll('text').data(dataset, key);
+}
+
 function updateDataValues() {
     updateDataRefs();
 
     bars.transition()
     .duration(500)
     .attr('x', (data, i) => xScale(i))
-    .attr('y', data => yScale(data))
+    .attr('y', data => yScale(data.value))
     .attr('width', xScale.bandwidth())
-    .attr('height', data => height - yScale(data))
-    .attr('fill', (data) => `rgb(0, 0, ${ data * 10 })`);
+    .attr('height', data => height - yScale(data.value))
+    .attr('fill', (data) => `rgb(0, 0, ${ data.value * 10 })`);
 
     text.transition()
     .duration(500)
-    .text(data => data)
+    .text(data => data.value)
     .attr('x', (data, i) => xScale(i) + xScale.bandwidth() / 2)
-    .attr('y', data => yScale(data) + 14);
+    .attr('y', data => yScale(data.value) + 14);
 }
 
 
 function addDataValue() {
 
     // Add new data value
-    dataset.push(generateRandomNumber(maxNumber));
+    dataset.push({
+        key: keyCounter,
+        value: generateRandomNumber(maxNumber)
+    });
+    keyCounter++;
 
     // Reset the x and y domain
-    xScale.domain(d3.range(dataset.length));
-    yScale.domain([0, d3.max(dataset)]);
-
+    updateScales();
     updateDataRefs();
 
     // Create the new bar and set it out of view
     bars.enter()
     .append('rect')
     .attr('x', width)
-    .attr('y', data => yScale(data))
+    .attr('y', data => yScale(data.value))
     .attr('width', xScale.bandwidth())
-    .attr('height', data => height - yScale(data))
-    .attr('fill', (data) => `rgb(0, 0, ${ data * 10 })`);
+    .attr('height', data => height - yScale(data.value))
+    .attr('fill', (data) => `rgb(0, 0, ${ data.value * 10 })`);
 
     text.enter()
     .append('text')
-    .text(data => data)
+    .text(data => data.value)
     .attr('x', () => width + xScale.bandwidth() / 2)
-    .attr('y', (data) => yScale(data) + 14)
+    .attr('y', (data) => yScale(data.value) + 14)
     .attr('font-family', 'sans-serif')
     .attr('font-size', '11px')
     .attr('fill', 'white')
     .attr('text-anchor', 'middle');
 }
 
-function updateDataRefs() {
-    bars = svg.selectAll('rect').data(dataset);
-    text = svg.selectAll('text').data(dataset);
-}
 
 function removeDataValue() {
     dataset.shift();
     updateDataRefs();
+    updateScales();
 
     bars.exit()
     .transition()
     .duration(500)
-    .attr('x', width)
+    .attr('x', -xScale.bandwidth())
     .remove();
 
-    updateDataValues();
+    text.exit()
+    .transition()
+    .duration(500)
+    .attr('x', -xScale.bandwidth())
+    .remove();
+
 }
