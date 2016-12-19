@@ -1,18 +1,24 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <title>D3 Practice</title>
-        <link href="stylesheets/style.css" rel="stylesheet" type="text/css" />
-    </head>
+<head>
+    <title>D3 Practice</title>
+    <link href="stylesheets/style.css" rel="stylesheet" type="text/css" />
+</head>
 
-    <body>
-        <h1>This is my D3 App</h1>
-        <p id="updateData">Click on this text to update the chart with new data values (once).</p>
-        <p id="addData">Click this to add another data value</p>
-        <p id="removeData">Click this to remove a data value</p>
+<body>
+    <h1>This is my D3 App</h1>
+    <!-- <p id="updateData">Click on this text to update the chart with new data values (once).</p>
+    <p id="addData">Click this to add another data value</p>
+    <p id="removeData">Click this to remove a data value</p> -->
 
 
-        <script src="https://d3js.org/d3.v4.min.js"></script>
-        <script src="/js/d3-barchart-updatingData.js"></script>
-    </body>
+    <div id="tooltip" class="hidden">
+        <p><strong>Project: </strong><span id="value">100</span></p>
+        <p><strong>Duration: </strong><span id="duration">100</span> mins</p>
+    </div>
+
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <!-- <script src="/js/d3-barchart-updatingData.js"></script> -->
+    <script src="/js/d3-wakatime.js"></script>
+</body>
 </html>

@@ -125,7 +125,37 @@ function enterDataValue() {
     .attr('y', data => yScale(data.value))
     .attr('width', xScale.bandwidth())
     .attr('height', data => height - yScale(data.value))
-    .attr('fill', (data) => `rgb(0, 0, ${ data.value * 10 })`);
+    .attr('fill', (data) => `rgb(0, 0, ${ data.value * 10 })`)
+    .on('mouseover', function(data) {
+        d3.select(this)
+        .transition()
+        .duration(250)
+        .attr('fill', 'orange');
+
+        //Get this bar's x/y values, then augment for the tooltip
+        const xPosition = parseFloat(d3.select(this).attr('x')) + xScale.bandwidth() / 2;
+        const yPosition = parseFloat(d3.select(this).attr('y')) / 2 + height;
+
+        //Update the tooltip position and value
+        d3.select('#tooltip')
+        .style('left', xPosition + 'px')
+        .style('top', yPosition + 'px')
+        .select('#value')
+        .text(data.value);
+
+        //Show the tooltip
+        d3.select('#tooltip').classed('hidden', false);
+
+    })
+    .on('mouseout', function(data) {
+        d3.select(this)
+        .transition()
+        .duration(250)
+        .attr('fill', `rgb(0, 0, ${data.value * 10})`);
+
+        d3.select('#tooltip').classed('hidden', true);
+    })
+    .on('click', () => sortBars());
 
     text.enter()
     .append('text')
@@ -135,9 +165,23 @@ function enterDataValue() {
     .attr('font-family', 'sans-serif')
     .attr('font-size', '11px')
     .attr('fill', 'white')
-    .attr('text-anchor', 'middle');
+    .attr('text-anchor', 'middle')
+    .style('pointer-events', 'none'); // Set so mousing over text won't trigger rect mouseout
 }
 
+function sortBars() {
+    svg.selectAll('rect')
+    .sort((first, second) => d3.ascending(first.value, second.value))
+    .transition()
+    .duration(1000)
+    .attr('x', (data, i) => xScale(i));
+
+    svg.selectAll('text')
+    .sort((first, second) => d3.ascending(first.value, second.value))
+    .transition()
+    .duration(1000)
+    .attr('x', (data, i) => xScale(i) + xScale.bandwidth() / 2);
+}
 
 function exitDataValue() {
     bars.exit()
